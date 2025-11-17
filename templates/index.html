@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Smartphone Addiction Predictor</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Define a vibrant accent color */
+        :root {
+            --primary-color: #5d5dff;
+            --accent-color: #00b7ff;
+            --text-light: #e6e6fa;
+            --text-dark: #1f1f3a;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --input-text-color: #f0f0f0;
+            /* Brighter white for input text */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1f1f3a 0%, #3a1f4f 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Floating Icons (Background Decor) */
+        .floating-icon {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            opacity: 0.1;
+            z-index: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2300d4ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: float 18s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-25px) rotate(8deg);
+            }
+        }
+
+        /* Glassmorphism Main Card - NO HOVER EFFECT */
+        .main-card {
+            background-color: var(--card-bg);
+            border-radius: 25px;
+            box-shadow: var(--shadow-light);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 50px;
+            max-width: 1500px;
+            min-height: 85vh;
+            position: relative;
+            z-index: 1;
+            /* Removed transition and hover styles */
+        }
+
+        h1.main-title,
+        h3 {
+            color: var(--accent-color);
+            font-weight: 700;
+            text-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+        }
+
+        /* Form Styling */
+        .form-group label {
+            font-weight: 400;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--input-text-color);
+            border-radius: 10px;
+            height: calc(1.5em + 0.75rem + 2px);
+        }
+
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+            border-color: var(--accent-color);
+            color: var(--input-text-color);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Styling for validation feedback */
+        .invalid-feedback {
+            font-size: 0.75rem;
+            color: #ff6b6b !important;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--text-dark);
+            font-weight: 700;
+            border-radius: 50px;
+            padding: 8px 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        /* Button hover for a slight lift/pulse */
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.6);
+        }
+
+        /* Result Section Styling */
+        .result-container {
+            padding-left: 30px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* New Tips Section Styling */
+        .tips-container {
+            padding-left: 30px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tips-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            /* ADDED: Transition for hover effect */
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+        }
+
+        /* Single, consolidated result card */
+        .result-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            /* ADDED: Transition for hover effect */
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+        }
+
+        /* ADDED: Hover effect for smaller cards - subtle lift and scale */
+        .result-summary:hover,
+        .tips-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+
+        .tips-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .tips-card ul li {
+            margin-bottom: 10px;
+            padding-left: 1.5em;
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .tips-card ul li:before {
+            content: "💡";
+            /* Lightbulb icon */
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+            font-size: 1.1em;
+        }
+
+        /* Prediction Split */
+        .prediction-split {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .prediction-item {
+            flex-basis: 45%;
+        }
+
+        .prediction-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        /* High-contrast result colors */
+        .addicted-text {
+            color: #ff6b6b;
+        }
+
+        .not-addicted-text {
+            color: #38c976;
+        }
+
+        .chart-container {
+            margin: 10px auto 0;
+            max-width: 160px;
+            max-height: 160px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            padding: 5px;
+        }
+
+        .model-title {
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 1200px) {
+            .main-card {
+                max-width: 900px;
+            }
+
+            .col-md-4 {
+                max-width: 50%;
+            }
+
+            .col-md-4:nth-child(3) {
+                margin-top: 30px;
+            }
+
+            .result-container {
+                border-left: none;
+                padding-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-card {
+                padding: 30px;
+                min-height: 90vh;
+            }
+
+            .col-md-4 {
+                max-width: 100%;
+            }
+
+            .result-container,
+            .tips-container {
+                border-left: none;
+                padding-left: 0;
+                margin-top: 30px;
+            }
+
+            .prediction-split {
+                flex-direction: column;
+            }
+
+            .prediction-item {
+                margin-bottom: 20px;
+            }
+
+            .chart-container {
+                max-width: 200px;
+                max-height: 200px;
+            }
+
+            .prediction-text {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="floating-icon"></div>
+    <div class="floating-icon"></div>
+    <div class="floating-icon"></div>
+    <div class="floating-icon"></div>
+    <div class="floating-icon"></div>
+    <div class="floating-icon"></div>
+
+    <div class="main-card container-fluid">
+        <h1 class="text-center main-title mb-2">📱 Smart Phone Addiction Prediction</h1>
+        <p class="text-center text-light mb-4">Input your usage data to receive a two-model prediction and personalized
+            insights.</p>
+
+        <div class="row">
+            <div class="col-md-4">
+                <h3 class="text-center mb-4">Enter Your Metrics </h3>
+                <form method="POST" id="dataInputForm"> {% set labels = [
+                    'Daily Screen Time (hours)', 'App Sessions(per day)',
+                    'Social Media Usage (hrs)', 'Gaming Time (hrs per day)',
+                    'Notifications Received', 'Night Usage (hrs)',
+                    'Age', 'Work/Study Hours(per day)',
+                    'Stress Level (1(low)-10(high))', 'Apps Installed'
+                    ] %}
+                    {% set names = [
+                    'daily_screen_time', 'app_sessions',
+                    'social_media_usage', 'gaming_time',
+                    'notifications', 'night_usage',
+                    'age', 'work_study_hours',
+                    'stress_level', 'apps_installed'
+                    ] %}
+                    {% set placeholders = [
+                    'e.g., 7.5 (1-24)', 'e.g., 180',
+                    'e.g., 3.0 (0-24)', 'e.g., 1.5 (0-24)',
+                    'e.g., 120', 'e.g., 0.5 (0-12)',
+                    'e.g., 25 (4-100)', 'e.g., 8 (0-20)',
+                    'e.g., 6 (0-10)', 'e.g., 150'
+                    ] %}
+                    <div class="row">
+                        {% for i in range(labels|length) %}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>{{ labels[i] }}</label>
+                                <input type="number" step="any" class="form-control" name="{{ names[i] }}"
+                                    id="{{ names[i] }}" required
+                                    value="{% if rf_prediction %}{{ request.form.get(names[i], '') }}{% else %}{% endif %}"
+                                    placeholder="{{ placeholders[i] }}" oninput="clearError('{{ names[i] }}')">
+                                <div id="{{ names[i] }}_error" class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block mt-4">Analyze My Habits</button>
+                </form>
+            </div>
+
+            <div class="col-md-4 result-container">
+                <h3 class="text-center mb-3">Model Prediction Summary</h3>
+
+                <div class="result-summary">
+                    <p class="text-muted mb-4">The analysis below combines results from two distinct Machine Learning
+                        models (Random Forest and SVM).</p>
+
+                    <div class="prediction-split">
+
+                        <div class="prediction-item">
+                            <h5 class="model-title">Random Forest</h5>
+                            {% if rf_prediction %}
+                            <p class="prediction-text">
+                                {% if rf_prediction == "Addicted" %}
+                                <span class="addicted-text">Addicted </span>
+                                {% else %}
+                                <span class="not-addicted-text">Not Addicted </span>
+                                {% endif %}
+                            </p>
+                            <p class="text-light small mt-1">
+                                Confidence:
+                                {{ (rf_proba.get(rf_prediction, 0) ) | round(1) }}%
+                            </p>
+                            <div class="chart-container">
+                                <canvas id="rfChart"></canvas>
+                            </div>
+                            <script>
+                                // Chart data is dynamic via Flask/Jinja
+                                const rfCtx = document.getElementById('rfChart').getContext('2d');
+                                const rfData = {
+                                    labels: ['Not Addicted', 'Addicted'],
+                                    datasets: [{
+                                        label: 'RF Prediction Probability',
+                                        data: [{{ rf_proba.get('Not Addicted', 0) }}, {{ rf_proba.get('Addicted', 0) }}],
+                                        backgroundColor: ['#38c976', '#ff6b6b'],
+                                        hoverBackgroundColor: ['#44e687', '#ff8484'],
+                                        borderWidth: 0
+                                    }]
+                                };
+                                new Chart(rfCtx, {
+                                    type: 'doughnut',
+                                    data: rfData,
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: { legend: { display: false } }
+                                    }
+                                });
+                            </script>
+                            {% else %}
+                            <p class="text-muted small">Awaiting data...</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="prediction-item">
+                            <h5 class="model-title">Support Vector Machine (SVM)</h5>
+                            {% if svm_prediction %}
+                            <p class="prediction-text">
+                                {% if svm_prediction == "Addicted" %}
+                                <span class="addicted-text">Addicted </span>
+                                {% else %}
+                                <span class="not-addicted-text">Not Addicted </span>
+                                {% endif %}
+                            </p>
+                            <p class="text-light small mt-1">
+                                Confidence:
+                                {{ (svm_proba.get(svm_prediction, 0) ) | round(1) }}%
+                            </p>
+                            <div class="chart-container">
+                                <canvas id="svmChart"></canvas>
+                            </div>
+                            <script>
+                                // Chart data is dynamic via Flask/Jinja
+                                const svmCtx = document.getElementById('svmChart').getContext('2d');
+                                const svmData = {
+                                    labels: ['Not Addicted', 'Addicted'],
+                                    datasets: [{
+                                        label: 'SVM Prediction Probability',
+                                        data: [{{ svm_proba.get('Not Addicted', 0) }}, {{ svm_proba.get('Addicted', 0) }}],
+                                        backgroundColor: ['#38c976', '#ff6b6b'],
+                                        hoverBackgroundColor: ['#44e687', '#ff8484'],
+                                        borderWidth: 0
+                                    }]
+                                };
+                                new Chart(svmCtx, {
+                                    type: 'doughnut',
+                                    data: svmData,
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: { legend: { display: false } }
+                                    }
+                                });
+                            </script>
+                            {% else %}
+                            <p class="text-muted small">Awaiting data...</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-4 tips-container">
+                <h3 class="text-center mb-3">Personalized Insights & Tips</h3>
+                <div class="tips-card">
+                    <p class="text-muted text-center" id="tips-status">Enter your metrics and click "Analyze My Habits"
+                        to get tailored recommendations!</p>
+                    <ul id="tips-list" style="display: none;">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper to safely get and convert value
+        const getVal = (id) => {
+            const val = $("#" + id).val();
+            return val === '' ? NaN : parseFloat(val);
+        };
+
+        // Function to display error message
+        function displayError(fieldId, message) {
+            const errorElement = $('#' + fieldId + '_error');
+            $('#' + fieldId).addClass('is-invalid');
+            errorElement.text(message).show();
+        }
+
+        // Function to clear error message
+        function clearError(fieldId) {
+            $('#' + fieldId).removeClass('is-invalid');
+            $('#' + fieldId + '_error').text('').hide();
+        }
+
+        // --- TIPS GENERATION FUNCTION ---
+        function generateTips(data) {
+            const tips = [];
+
+            // Clear previous tips
+            $('#tips-list').empty().hide();
+            $('#tips-status').show().text('Generating tips...');
+
+            // 1. Screen Time and Night Usage
+            if (data.daily_screen_time > 8) {
+                tips.push("Your **Daily Screen Time is quite high** (over 8 hours). Try setting a hard limit for non-essential use to regain balance.");
+            } else if (data.daily_screen_time >= 5) {
+                tips.push("Your screen time is moderate. Focus on **quality screen time** by replacing passive scrolling with active learning or connecting with others.");
+            }
+
+            if (data.night_usage > 1) {
+                tips.push(`Your **Night Usage (${data.night_usage} hrs) is impacting sleep.** Activate a Blue Light filter and keep your phone out of the bedroom an hour before bed.`);
+            }
+
+            // 2. Social Media and Gaming
+            if (data.social_media_usage > 2.5) {
+                tips.push("Heavy **Social Media Usage** detected. Use features to track and limit time on specific apps, or try a digital detox day.");
+            }
+
+            if (data.gaming_time > 2) {
+                tips.push("High **Gaming Time**. Consider scheduling breaks or replacing one session a week with a non-digital hobby like reading or exercise.");
+            }
+
+            // 3. Notifications and App Sessions
+            if (data.notifications > 100) {
+                tips.push("You receive a very high number of **Notifications**. Turn off non-essential notifications (especially social media) to reduce impulse checking.");
+            }
+
+            if (data.app_sessions > 150) {
+                tips.push(`Your ${data.app_sessions} **App Sessions** suggest high 'phone checking' behavior. Try moving distracting apps off your home screen to break the habit.`);
+            }
+
+            // 4. Stress and Work/Study Balance
+            if (data.stress_level >= 8) {
+                tips.push(`High **Stress Level (${data.stress_level}/10)** may be a factor. Use the phone as a tool for mindfulness/meditation, not an escape mechanism.`);
+            } else if (data.stress_level >= 5) {
+                tips.push("Moderate Stress detected. Ensure your phone usage isn't your primary coping mechanism; find healthy alternatives.");
+            }
+
+            if (data.work_study_hours < 4 && data.daily_screen_time > 6) {
+                tips.push("With low **Work/Study Hours**, high screen time might be replacing productive activity. Find a new skill to learn or project to start.");
+            }
+
+            // 5. App Overload
+            if (data.apps_installed > 80) {
+                tips.push(`You have a large number of **Apps Installed**. Declutter and delete apps you haven't used in a month to reduce visual distraction and mental load.`);
+            }
+
+
+            // Display tips
+            if (tips.length > 0) {
+                $('#tips-status').hide();
+                tips.forEach(tip => {
+                    $('#tips-list').append(`<li>${tip}</li>`);
+                });
+                $('#tips-list').show();
+            } else {
+                $('#tips-status').show().text('Your usage metrics indicate a well-balanced digital life! Keep up the good work.');
+                $('#tips-list').hide();
+            }
+        }
+
+        // Handle form submission
+        $(document).ready(function () {
+            $("#dataInputForm").submit(function (e) {
+                let hasError = false;
+
+                // Clear all previous errors
+                $('.invalid-feedback').hide().text('');
+                $('.form-control').removeClass('is-invalid');
+
+                // --- VALIDATION LOGIC ---
+                const inputData = {
+                    daily_screen_time: getVal('daily_screen_time'),
+                    social_media_usage: getVal('social_media_usage'),
+                    gaming_time: getVal('gaming_time'),
+                    night_usage: getVal('night_usage'),
+                    age: getVal('age'),
+                    work_study_hours: getVal('work_study_hours'),
+                    stress_level: getVal('stress_level'),
+                    apps_installed: getVal('apps_installed'),
+                    app_sessions: getVal('app_sessions'),
+                    notifications: getVal('notifications')
+                };
+
+                // Perform all validation checks
+                // 1. Daily Screen Time (1-24 hours)
+                if (inputData.daily_screen_time < 1 || inputData.daily_screen_time > 24 || isNaN(inputData.daily_screen_time)) {
+                    displayError('daily_screen_time', 'Must be between 1 and 24 hours.');
+                    hasError = true;
+                }
+
+                // 2. Social Media Usage (0-24 hours)
+                if (inputData.social_media_usage < 0 || inputData.social_media_usage > 24 || isNaN(inputData.social_media_usage)) {
+                    displayError('social_media_usage', 'Must be between 0 and 24 hours.');
+                    hasError = true;
+                }
+
+                // 3. Gaming Time (0-24 hours)
+                if (inputData.gaming_time < 0 || inputData.gaming_time > 24 || isNaN(inputData.gaming_time)) {
+                    displayError('gaming_time', 'Must be between 0 and 24 hours.');
+                    hasError = true;
+                }
+
+                // 4. Night Usage (0-12 hours)
+                if (inputData.night_usage < 0 || inputData.night_usage > 12 || isNaN(inputData.night_usage)) {
+                    displayError('night_usage', 'Must be between 0 and 12 hours.');
+                    hasError = true;
+                }
+
+                // 5. Age (4-100)
+                if (inputData.age < 4 || inputData.age > 100 || isNaN(inputData.age) || inputData.age % 1 !== 0) {
+                    displayError('age', 'Must be a whole number between 4 and 100.');
+                    hasError = true;
+                }
+
+                // 6. Work/Study Hours (0-20 hours)
+                if (inputData.work_study_hours < 0 || inputData.work_study_hours > 20 || isNaN(inputData.work_study_hours)) {
+                    displayError('work_study_hours', 'Must be between 0 and 20 hours.');
+                    hasError = true;
+                }
+
+                // 7. Stress Level (0-10)
+                if (inputData.stress_level < 0 || inputData.stress_level > 10 || isNaN(inputData.stress_level)) {
+                    displayError('stress_level', 'Must be between 0 and 10.');
+                    hasError = true;
+                }
+
+                // 8. Apps Installed (Positive integer)
+                if (inputData.apps_installed < 1 || isNaN(inputData.apps_installed) || inputData.apps_installed % 1 !== 0) {
+                    displayError('apps_installed', 'Must be a positive whole number.');
+                    hasError = true;
+                }
+
+                // 9. App Sessions (Non-negative integer)
+                if (inputData.app_sessions < 0 || isNaN(inputData.app_sessions) || inputData.app_sessions % 1 !== 0) {
+                    displayError('app_sessions', 'Must be a non-negative whole number.');
+                    hasError = true;
+                }
+
+                // 10. Notifications Received (Non-negative integer)
+                if (inputData.notifications < 0 || isNaN(inputData.notifications) || inputData.notifications % 1 !== 0) {
+                    displayError('notifications', 'Must be a non-negative whole number.');
+                    hasError = true;
+                }
+
+                // Final Check
+                if (hasError) {
+                    e.preventDefault();
+
+                    // Scroll to the first erroneous input field
+                    const firstErrorInput = $('.is-invalid').first();
+                    if (firstErrorInput.length) {
+                        $('html, body').animate({
+                            scrollTop: firstErrorInput.offset().top - 80
+                        }, 300);
+                    }
+
+                    // Hide tips when there's an error
+                    $('#tips-status').show().text('Please fix the errors above before analyzing.');
+                    $('#tips-list').hide();
+                } else {
+                    // Let the form submit to the Flask server now.
+                    generateTips(inputData);
+                }
+            });
+
+            // Re-run tip generation if the page reloaded with existing prediction data (Flask context)
+            {% if rf_prediction %}
+            const initialData = {
+                // Use request.form directly as the prediction is active
+                daily_screen_time: parseFloat("{{ request.form.get('daily_screen_time', 0) }}"),
+                social_media_usage: parseFloat("{{ request.form.get('social_media_usage', 0) }}"),
+                gaming_time: parseFloat("{{ request.form.get('gaming_time', 0) }}"),
+                night_usage: parseFloat("{{ request.form.get('night_usage', 0) }}"),
+                age: parseFloat("{{ request.form.get('age', 0) }}"),
+                work_study_hours: parseFloat("{{ request.form.get('work_study_hours', 0) }}"),
+                stress_level: parseFloat("{{ request.form.get('stress_level', 0) }}"),
+                apps_installed: parseFloat("{{ request.form.get('apps_installed', 0) }}"),
+                app_sessions: parseFloat("{{ request.form.get('app_sessions', 0) }}"),
+                notifications: parseFloat("{{ request.form.get('notifications', 0) }}")
+            };
+            generateTips(initialData);
+            {% endif %}
+        });
+    </script>
+</body>
+
+</html>

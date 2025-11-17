@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f7f9fc; margin: 0; padding: 0; }
+        .container { display: flex; height: 100vh; }
+        .left, .right { flex: 1; padding: 40px; box-sizing: border-box; }
+        .left { background-color: #ffffff; box-shadow: 2px 0 5px rgba(0,0,0,0.1); overflow-y: auto; }
+        .right { background-color: #f0f4f8; text-align: center; }
+        .result-box { background-color: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .risk { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+        img { max-width: 80%; height: auto; }
+        a { display: inline-block; margin-top: 20px; text-decoration: none; color: #007bff; font-weight: bold; }
+        a:hover { color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left side: same input form -->
+        <div class="left">
+            <h2>Enter User Details</h2>
+            <form action="/predict" method="post">
+                <!-- repeat all input fields from index.html -->
+                <label>Daily Screen Time (hrs)</label>
+                <input type="number" step="0.01" name="daily_screen_time" required>
+                <label>App Sessions</label>
+                <input type="number" name="app_sessions" required>
+                <label>Social Media Usage (hrs)</label>
+                <input type="number" step="0.01" name="social_media_usage" required>
+                <label>Gaming Time (hrs)</label>
+                <input type="number" step="0.01" name="gaming_time" required>
+                <label>Notifications</label>
+                <input type="number" name="notifications" required>
+                <label>Night Usage (hrs)</label>
+                <input type="number" step="0.01" name="night_usage" required>
+                <label>Age</label>
+                <input type="number" name="age" required>
+                <label>Work/Study Hours</label>
+                <input type="number" step="0.01" name="work_study_hours" required>
+                <label>Stress Level (1-10)</label>
+                <input type="number" step="0.1" name="stress_level" required>
+                <label>Apps Installed</label>
+                <input type="number" name="apps_installed" required>
+                <input type="submit" value="Predict">
+            </form>
+        </div>
+
+        <!-- Right side: Prediction results -->
+        <div class="right">
+            <div class="result-box">
+                <h2>Prediction Results</h2>
+                <p><b>Random Forest:</b> {{ rf_pred }} (Confidence: {{ rf_prob }}%)</p>
+                <p><b>SVM:</b> {{ svm_pred }} (Confidence: {{ svm_prob }}%)</p>
+                <div class="risk" style="color: {% if 'High' in risk_msg %}red{% else %}green{% endif %};">
+                    {{ risk_msg }}
+                </div>
+                <img src="data:image/png;base64,{{ plot_url }}" alt="Confidence Graph">
+                <a href="/">Predict Again</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
